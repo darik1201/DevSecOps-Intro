@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: juice-violator
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: juice }
+  template:
+    metadata:
+      labels: { app: juice }
+    spec:
+      containers:
+        - name: juice
+          image: bkimminich/juice-shop:v20.0.0   # a TAG, not a digest -> my deny fires
+          # no ports: -> my warn fires
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          readinessProbe:
+            httpGet: { path: /, port: 3000 }
+          livenessProbe:
+            httpGet: { path: /, port: 3000 }
